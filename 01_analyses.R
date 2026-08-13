@@ -27,7 +27,7 @@ df_final_merged <- df_final_merged %>%
 
 
 ###############################  Fig. 4: Heat map of bivariate correlations ###############################
-vars <- c("Amax", "breadth_90","T_opt","gsw_mean_above30")
+vars <- c("Amax", "Tbreadth","Topt","gsw_mean_above30")
 
 
 
@@ -83,10 +83,10 @@ cor_long
 
 pretty_labels <- c(
   Amax = expression(italic(A)[max]),
-  breadth_90 = expression(italic(T)[breadth]),
-  T_opt = expression(italic(T)[opt]),
-  E_D = expression(italic(E)[d*","~A]),
-  T50_prime = expression(italic(CT)["max,1min"]),
+  Tbreadth = expression(italic(T)[breadth]),
+  Topt = expression(italic(T)[opt]),
+  Ed_A = expression(italic(E)[d*","~A]),
+  CTmax_1min = expression(italic(CT)["max,1min"]),
   gsw_mean_above30 = expression(italic(g)[s])
 )
 
@@ -155,7 +155,6 @@ curve_coverage <- gsw_by_tleaf %>%
   mutate(
     prop_curves = n_curves / n_distinct(df_final_merged$curveID)
   )
-
 
 majority_range <- curve_coverage %>%
   filter(prop_curves >= 0.7) %>%
@@ -274,7 +273,7 @@ par(mfrow = c(2,2))
 
 ###### Tbreadth #######
 mod_breadth <- lm(
-  Amax ~ breadth_90 + gsw_mean_above30,
+  Amax ~ Tbreadth + gsw_mean_above30,
   data = df_partial
 )
 
@@ -282,7 +281,7 @@ summary(mod_breadth)
 
 ###### Topt #####
 mod_Topt <- lm(
-  Amax ~ T_opt + gsw_mean_above30,
+  Amax ~ Topt + gsw_mean_above30,
   data = df_partial
 )
 
@@ -290,8 +289,8 @@ summary(mod_Topt)
 
 
 var_labels <- c(
-  T_opt = expression(italic(T)[opt]~"(°C)"),
-  breadth_90 = "Thermal breadth (°C)"
+  Topt = expression(italic(T)[opt]~"(°C)"),
+  Tbreadth = "Thermal breadth (°C)"
 )
 
 plot_partial_gsw <- function(var, data) {
@@ -396,39 +395,22 @@ vif(mod_Topt)
 vif(mod_breadth)
 
 ########## Make plots
-p_Topt <- plot_partial_gsw("T_opt", df_partial)
-p_breadth <- plot_partial_gsw("breadth_90", df_partial)
+p_Topt <- plot_partial_gsw("Topt", df_partial)
+p_breadth <- plot_partial_gsw("Tbreadth", df_partial)
 
 ########## Display 
 p_Topt
 p_breadth
 
-all<-(p_breadth | p_Topt)
-all
+fig6 <- (p_breadth | p_Topt)
+fig6
 
 ggsave(
-  "./figures_updated/Figure5.pdf",
-  all,
+  "./figures_updated/Fig6.pdf",
+  fig6,
   height = 8,
   width = 10,
   units = "in"
-)
-
-########## Save 
-ggsave(
-  "./figures_updated/Amax_versus_Topt_partial_gsw.pdf",
-  p_Topt,
-  height = 12,
-  width = 12,
-  units = "cm"
-)
-
-ggsave(
-  "./figures_updated/Amax_versus_breadth_partial_gsw.pdf",
-  p_breadth,
-  height = 12,
-  width = 12,
-  units = "cm"
 )
 
 ########################### Fig. 7 Topt versus Ed,A & T50 ###########################
@@ -552,7 +534,7 @@ plot_partial_model <- function(response, focal_predictor,
 
 get_partial_x <- function(focal_predictor, data) {
   
-  predictors <- c("T_opt", "T50", "gsw_mean_above30")
+  predictors <- c("Topt", "T50", "gsw_mean_above30")
   
   df <- data %>%
     select(
@@ -572,7 +554,7 @@ get_partial_x <- function(focal_predictor, data) {
 }
 
 
-x_Topt <- get_partial_x("T_opt", df_final_merged)
+x_Topt <- get_partial_x("Topt", df_final_merged)
 x_T50  <- get_partial_x("T50", df_final_merged)
 
 x_range <- range(
@@ -585,7 +567,7 @@ x_range <- x_range + c(-1, 1)
 
 get_partial_y <- function(response, data) {
   
-  predictors <- c("T_opt", "T50", "gsw_mean_above30")
+  predictors <- c("Topt", "T50", "gsw_mean_above30")
   
   df <- data %>%
     select(
@@ -605,8 +587,8 @@ get_partial_y <- function(response, data) {
 }
 
 
-y_Tbreadth <- get_partial_y("breadth_90", df_final_merged)
-y_EdA      <- get_partial_y("E_D", df_final_merged)
+y_Tbreadth <- get_partial_y("Tbreadth", df_final_merged)
+y_EdA      <- get_partial_y("Ed_A", df_final_merged)
 
 y_Tbreadth_range <- range(y_Tbreadth, na.rm = TRUE)
 y_EdA_range      <- range(y_EdA, na.rm = TRUE)
@@ -617,9 +599,9 @@ y_EdA_range      <- y_EdA_range + c(-0.1, 0.1)
 p_Tbreadth <- list(
   
   plot_partial_model(
-    response = "breadth_90",
-    focal_predictor = "T_opt",
-    predictors = c("T_opt", "T50", "gsw_mean_above30"),
+    response = "Tbreadth",
+    focal_predictor = "Topt",
+    predictors = c("Topt", "T50", "gsw_mean_above30"),
     data = df_final_merged,
     xlab_expr = expression(italic(T)[opt] ~ "(°C)"),
     ylab_expr = expression(italic(T)[breadth] ~ "(°C)"),
@@ -628,9 +610,9 @@ p_Tbreadth <- list(
   ),
   
   plot_partial_model(
-    response = "breadth_90",
+    response = "Tbreadth",
     focal_predictor = "T50",
-    predictors = c("T_opt", "T50", "gsw_mean_above30"),
+    predictors = c("Topt", "T50", "gsw_mean_above30"),
     data = df_final_merged,
     xlab_expr = expression(italic(T)[50] ~ "(°C)"),
     ylab_expr = expression(italic(T)[breadth] ~ "(°C)"),
@@ -643,9 +625,9 @@ p_Tbreadth <- list(
 p_EdA <- list(
   
   plot_partial_model(
-    response = "E_D",
-    focal_predictor = "T_opt",
-    predictors = c("T_opt", "T50", "gsw_mean_above30"),
+    response = "Ed_A",
+    focal_predictor = "Topt",
+    predictors = c("Topt", "T50", "gsw_mean_above30"),
     data = df_final_merged,
     xlab_expr = expression(italic(T)[opt] ~ "(°C)"),
     ylab_expr = expression(italic(E)[d*","*A] ~ "(eV)"),
@@ -654,9 +636,9 @@ p_EdA <- list(
   ),
   
   plot_partial_model(
-    response = "E_D",
+    response = "Ed_A",
     focal_predictor = "T50",
-    predictors = c("T_opt", "T50", "gsw_mean_above30"),
+    predictors = c("Topt", "T50", "gsw_mean_above30"),
     data = df_final_merged,
     xlab_expr = expression(italic(T)[50] ~ "(°C)"),
     ylab_expr = expression(italic(E)[d*","*A] ~ "(eV)"),
@@ -664,43 +646,20 @@ p_EdA <- list(
     ylim = y_EdA_range
   )
 )
-all <- (p_Tbreadth[[1]] | p_Tbreadth[[2]]) /
+fig7 <- (p_Tbreadth[[1]] | p_Tbreadth[[2]]) /
   (p_EdA[[1]]     | p_EdA[[2]])
 
-all
-
-########## Save 
-ggsave(
-  "./figures_updated/Tbreadth_Topt.pdf",
-  p_Tbreadth[[1]],
-  height = 12,
-  width = 12,
-  units = "cm"
-)
+fig7
 
 ggsave(
-  "./figures_updated/Tbreadth_T50.pdf",
-  p_Tbreadth[[2]],
-  height = 12,
-  width = 12,
-  units = "cm"
-)
-ggsave(
-  "./figures_updated/Ed_Topt.pdf",
-  p_EdA[[1]],
-  height = 12,
-  width = 12,
-  units = "cm"
+  "./figures_updated/Fig7.pdf",
+  fig7,
+  height = 10,
+  width = 10,
+  units = "in"
 )
 
-ggsave(
-  "./figures_updated/Ed_T50.pdf",
-  p_EdA[[2]],
-  height = 12,
-  width = 12,
-  units = "cm"
-)
-############## Table 2 ##############
+############## Partial regression stats reported in Fig. 6 / Fig. 7 captions ##############
 get_partial_stats <- function(var, data) {
   
   df <- data %>%
@@ -747,10 +706,10 @@ get_partial_stats <- function(var, data) {
 }
 
 partial_results <- bind_rows(
-  get_partial_stats("E_D", df_partial),
-  get_partial_stats("breadth_90", df_partial),
-  get_partial_stats("T_opt", df_partial),
-  get_partial_stats("T50_prime", df_partial),
+  get_partial_stats("Ed_A", df_partial),
+  get_partial_stats("Tbreadth", df_partial),
+  get_partial_stats("Topt", df_partial),
+  get_partial_stats("CTmax_1min", df_partial),
   get_partial_stats("T50", df_partial)
 )
 
@@ -763,34 +722,34 @@ partial_results
 # get_partial_stats(), just so vif() has a model object to act on.
 
 vif_breadth_full <- lm(
-  breadth_90 ~ T_opt + T50 + gsw_mean_above30,
+  Tbreadth ~ Topt + T50 + gsw_mean_above30,
   data = df_final_merged
 )
 vif(vif_breadth_full)
 
 vif_EdA_full <- lm(
-  E_D ~ T_opt + T50 + gsw_mean_above30,
+  Ed_A ~ Topt + T50 + gsw_mean_above30,
   data = df_final_merged
 )
 vif(vif_EdA_full)
 
 # Topt-as-response models (used for the Topt_partial_results table)
 vif_Topt_EdA <- lm(
-  T_opt ~ E_D + gsw_mean_above30,
+  Topt ~ Ed_A + gsw_mean_above30,
   data = df_final_merged
 )
 vif(vif_Topt_EdA)
 
 vif_Topt_T50 <- lm(
-  T_opt ~ T50 + gsw_mean_above30,
+  Topt ~ T50 + gsw_mean_above30,
   data = df_final_merged
 )
 vif(vif_Topt_T50)
 
-# Table 2's remaining 2-predictor Amax models (E_D, T50_prime, T50 —
-# breadth_90 and T_opt are already covered by mod_breadth/mod_Topt above)
-vif_Amax_EdA   <- lm(Amax ~ E_D       + gsw_mean_above30, data = df_final_merged)
-vif_Amax_T50p  <- lm(Amax ~ T50_prime + gsw_mean_above30, data = df_final_merged)
+# Table 2's remaining 2-predictor Amax models (Ed_A, CTmax_1min, T50 —
+# Tbreadth and Topt are already covered by mod_breadth/mod_Topt above)
+vif_Amax_EdA   <- lm(Amax ~ Ed_A       + gsw_mean_above30, data = df_final_merged)
+vif_Amax_T50p  <- lm(Amax ~ CTmax_1min + gsw_mean_above30, data = df_final_merged)
 vif_Amax_T50   <- lm(Amax ~ T50       + gsw_mean_above30, data = df_final_merged)
 
 vif(vif_Amax_EdA)
@@ -798,74 +757,69 @@ vif(vif_Amax_T50p)
 vif(vif_Amax_T50)
 
 ############################### Supporting Information ##############################
-############## Table 1 ##############
-site_sample_sizes <- df_final_merged %>%
-  count(site, name = "n") %>%
-  arrange(site)
-
-site_sample_sizes
-
-population_sample_sizes <- df_final_merged %>%
-  count(population_category, name = "n") %>%
-  arrange(population_category)
-
-population_sample_sizes
-
-vars <- c(
-  "Amax", "breadth_90", "T_opt", "E_D", "T50",
-  "Ea_kJmol", "z", "T50_prime", "lnA", "gsw_mean_above30"
+############## Table S1: Site and population sampling description ##############
+# Taxon labels: S10T18P03 (site 10) is recorded as "niphophila" in the
+# source metadata, while every other site-10 individual is "hedraia" --
+# per review, grouped with hedraia here (site 10 total n = 10) rather
+# than broken out as its own row.
+taxon_labels <- c(
+  "pauciflora" = "Eucalyptus pauciflora subsp. pauciflora",
+  "acerina"    = "Eucalyptus pauciflora subsp. acerina",
+  "hedraia"    = "Eucalyptus pauciflora subsp. hedraia",
+  "niphophila" = "Eucalyptus pauciflora subsp. hedraia",
+  "lacrimans"  = "Eucalyptus lacrimans"
 )
 
-sample_sizes <- df_final_merged %>%
-  summarise(
-    across(all_of(vars), ~ sum(!is.na(.)))
-  ) %>%
-  tidyr::pivot_longer(
-    everything(),
-    names_to = "Trait",
-    values_to = "Sample_size"
-  )
+elev_class_labels <- c(
+  "tableland"  = "Low (tableland)",
+  "montane"    = "Mid (montane)",
+  "sub alpine" = "High (subalpine)"
+)
 
-sample_sizes
+site_elev <- df_final_merged %>%
+  group_by(site) %>%
+  summarise(elev_m = round(mean(elev_m, na.rm = TRUE)), .groups = "drop")
 
-
-sample_sizes_pop <- df_final_merged %>%
+table_s1 <- df_final_merged %>%
+  mutate(Taxon = taxon_labels[species]) %>%
+  count(population_category, Taxon, site, name = "n") %>%
   group_by(population_category) %>%
-  summarise(
-    across(all_of(vars), ~ sum(!is.na(.))),
-    .groups = "drop"
-  ) %>%
-  tidyr::pivot_longer(
-    -population_category,
-    names_to = "Trait",
-    values_to = "N"
-  ) %>%
-  tidyr::pivot_wider(
-    names_from = population_category,
-    values_from = N
+  mutate(N = sum(n)) %>%
+  ungroup() %>%
+  left_join(site_elev, by = "site") %>%
+  mutate(`Source elevation class` = elev_class_labels[as.character(population_category)]) %>%
+  arrange(population_category, site) %>%
+  select(
+    `Source elevation class`, N, Taxon, n,
+    `Site identifier` = site, `Elevation (m)` = elev_m
   )
 
-sample_sizes_pop
+table_s1
+write.csv(table_s1, "./figures_updated/TableS1.csv", row.names = FALSE)
 
+############## Table S2: Sample sizes by parameter and source population ##############
+vars <- c(
+  "Amax", "Tbreadth", "Topt", "Ed_A", "Ea_PSII",
+  "T50", "z", "CTmax_1min", "lnA_PSII", "gsw_mean_above30"
+)
 
+n_by_class <- df_final_merged %>%
+  group_by(population_category) %>%
+  summarise(across(all_of(vars), ~ sum(!is.na(.))), .groups = "drop") %>%
+  tidyr::pivot_longer(-population_category, names_to = "trait", values_to = "n") %>%
+  tidyr::pivot_wider(names_from = population_category, values_from = n)
 
-##############Table S2 ###########
-df_sub <- df_final_merged %>%
-  select(breadth_90, Amax, T_opt, E_D, T50,Ea_kJmol,lnA,T50,z,T50_prime, gsw_mean_above30, population_category) %>%
-  drop_na()
-
-trait_summary <- df_sub %>%
-  select(-population_category) %>%
-  
+trait_summary <- df_final_merged %>%
   summarise(
     across(
-      everything(),
+      all_of(vars),
       list(
-        min = ~round(min(.x, na.rm = TRUE), 2),
-        max = ~round(max(.x, na.rm = TRUE), 2),
-        mean = ~round(mean(.x, na.rm = TRUE), 2),
-        median = ~round(median(.x, na.rm = TRUE), 2),
-        SE = ~round(sd(.x, na.rm = TRUE) / sqrt(sum(!is.na(.x))), 2)
+        N      = ~ sum(!is.na(.x)),
+        Min    = ~ round(min(.x, na.rm = TRUE), 2),
+        Max    = ~ round(max(.x, na.rm = TRUE), 2),
+        Mean   = ~ round(mean(.x, na.rm = TRUE), 2),
+        Median = ~ round(median(.x, na.rm = TRUE), 2),
+        SE     = ~ round(sd(.x, na.rm = TRUE) / sqrt(sum(!is.na(.x))), 2)
       )
     )
   ) %>%
@@ -879,39 +833,33 @@ trait_summary <- df_sub %>%
     names_from = statistic,
     values_from = value
   )
-trait_summary %>%
-  mutate(across(where(is.numeric), ~ round(.x, 2)))
-trait_order <- c(
-  "Amax",
-  "breadth_90",
-  "T_opt",
-  "E_D",
-  "Ea_kJmol",
-  "T50",
-  "z",
-  "T50_prime",
-  "lnA",
-  "gsw_mean_above30"
-)
 
-Table2 <- trait_summary %>%
-  slice(match(trait_order, trait))
-Table2
+table_s2 <- trait_summary %>%
+  left_join(n_by_class, by = "trait") %>%
+  slice(match(vars, trait)) %>%
+  select(
+    Trait = trait, N,
+    Low = tableland, Mid = montane, High = `sub alpine`,
+    Min, Max, Mean, Median, SE
+  )
+
+table_s2
+write.csv(table_s2, "./figures_updated/TableS2.csv", row.names = FALSE)
 
 ####Topt versus Ed,A and T50 ##############
 get_partial_stats_Topt <- function(var, data) {
   
   df <- data %>%
     select(
-      T_opt,
+      Topt,
       all_of(var),
       gsw_mean_above30
     ) %>%
     na.omit()
   
-  # residualize T_opt against gsw
+  # residualize Topt against gsw
   res_Topt <- resid(
-    lm(T_opt ~ gsw_mean_above30, data = df)
+    lm(Topt ~ gsw_mean_above30, data = df)
   )
   
   # residualize predictor against gsw
@@ -945,13 +893,13 @@ get_partial_stats_Topt <- function(var, data) {
 }
 
 Topt_partial_results <- bind_rows(
-  get_partial_stats_Topt("E_D", df_final_merged),
+  get_partial_stats_Topt("Ed_A", df_final_merged),
   get_partial_stats_Topt("T50", df_final_merged)
 )
 
 Topt_partial_results
 
-############# Fig S2 ###############
+############# Fig S1 ###############
 
 library(maps)
 library(dplyr)
@@ -1012,7 +960,6 @@ site_labels <- df_clean %>%
       TRUE ~ 0.08
     )
   )
-library(ggrepel)
 
 
 # Plot
@@ -1070,18 +1017,20 @@ map<-ggplot() +
     legend.text = element_text(size = 10)
   )
 map
-#ggsave("figures_updated/FigS2_v2.pdf", map, height = 5, width = 7, units = "in")
 
+# One row per elevation class (not per site) -- the panels show
+# class-level means/SEs across all individuals, per the Fig. S1 caption.
 summary_table <- df_final_merged %>%
-  group_by(population_category,site) %>%
+  group_by(population_category) %>%
   summarise(
     n = n(),
-    elev_mean=mean(elev_m, na.rm = T),
-    elev_se=sd(elev_m, na.rm = TRUE) / sqrt(n),
-    MAP_mean = mean(BIO12, na.rm = TRUE),
-    MAP_se   = sd(BIO12, na.rm = TRUE) / sqrt(n),
+    elev_mean = mean(elev_m, na.rm = TRUE),
+    elev_se   = sd(elev_m, na.rm = TRUE) / sqrt(n),
+    MAP_mean  = mean(BIO12, na.rm = TRUE),
+    MAP_se    = sd(BIO12, na.rm = TRUE) / sqrt(n),
     MTWQ_mean = mean(BIO10, na.rm = TRUE),
-    MTWQ_se   = sd(BIO10, na.rm = TRUE) / sqrt(n)
+    MTWQ_se   = sd(BIO10, na.rm = TRUE) / sqrt(n),
+    .groups = "drop"
   )
 
 summary_table
@@ -1167,10 +1116,13 @@ p_climate <- ggplot(
 
 p_climate
 
-#ggsave("figures_updated/FigS2_climate_by_site.pdf", p_climate, height = 4, width = 10, units = "in")
+fig_s1 <- map | p_climate
+fig_s1
+
+ggsave("figures_updated/FigS1.pdf", fig_s1, height = 5, width = 12, units = "in")
 
 
-############# Fig S3 ###############
+############# Fig S2 ###############
 df_sub <- df_final_merged
 
 get_lm_label <- function(df, yvar) {
@@ -1223,7 +1175,7 @@ Amax_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Amax,color=population_category))+
 Amax_by_elev
 summary(lm(Amax~elev_m,data=df_sub))
 
-Tbreadth_by_elev<-ggplot(df_sub,aes(x=elev_m,y=breadth_90,color=population_category))+
+Tbreadth_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Tbreadth,color=population_category))+
   geom_point()+
   scale_colour_manual(
     values = c(
@@ -1254,7 +1206,7 @@ Tbreadth_by_elev<-ggplot(df_sub,aes(x=elev_m,y=breadth_90,color=population_categ
     legend.position = "none")
 Tbreadth_by_elev
 
-Topt_by_elev<-ggplot(df_sub,aes(x=elev_m,y=T_opt,color=population_category))+
+Topt_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Topt,color=population_category))+
   geom_point()+
   scale_colour_manual(
     values = c(
@@ -1281,7 +1233,7 @@ Topt_by_elev<-ggplot(df_sub,aes(x=elev_m,y=T_opt,color=population_category))+
     legend.position = "none")
 Topt_by_elev
 
-Ed_by_elev<-ggplot(df_sub,aes(x=elev_m,y=E_D,color=population_category))+
+Ed_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ed_A,color=population_category))+
   geom_point()+
   scale_colour_manual(
       values = c(
@@ -1335,7 +1287,7 @@ T50_by_elev<-ggplot(df_sub,aes(x=elev_m,y=T50,color=population_category))+
     legend.position = "none")
 T50_by_elev
 
-Ea_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ea_kJmol,color=population_category))+
+Ea_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ea_PSII,color=population_category))+
   geom_point()+
   scale_colour_manual(
     values = c(
@@ -1389,9 +1341,9 @@ z_by_elev<-ggplot(df_sub,aes(x=elev_m,y=z,color=population_category))+
     legend.position = "none")
 z_by_elev
 
-T50_prime_by_elev <- ggplot(
+CTmax_1min_by_elev <- ggplot(
   df_sub,
-  aes(x = elev_m, y = T50_prime, color = population_category)
+  aes(x = elev_m, y = CTmax_1min, color = population_category)
 ) +
   geom_point() +
   scale_colour_manual(
@@ -1418,7 +1370,7 @@ T50_prime_by_elev <- ggplot(
     legend.position = "none"
   )
 
-T50_prime_by_elev
+CTmax_1min_by_elev
 
 gsw_by_elev<-ggplot(df_sub,aes(x=elev_m,y=gsw_mean_above30,color=population_category))+
   geom_point()+
@@ -1450,28 +1402,28 @@ gsw_by_elev
 
 library(patchwork)
 Amax_by_elev <- add_p_label(Amax_by_elev, get_lm_label(df_sub, "Amax"))
-Tbreadth_by_elev <- add_p_label(Tbreadth_by_elev, get_lm_label(df_sub, "breadth_90"))
-Topt_by_elev     <- add_p_label(Topt_by_elev, get_lm_label(df_sub, "T_opt"))
-Ed_by_elev       <- add_p_label(Ed_by_elev, get_lm_label(df_sub, "E_D"))
+Tbreadth_by_elev <- add_p_label(Tbreadth_by_elev, get_lm_label(df_sub, "Tbreadth"))
+Topt_by_elev     <- add_p_label(Topt_by_elev, get_lm_label(df_sub, "Topt"))
+Ed_by_elev       <- add_p_label(Ed_by_elev, get_lm_label(df_sub, "Ed_A"))
 T50_by_elev      <- add_p_label(T50_by_elev, get_lm_label(df_sub, "T50"))
-Ea_by_elev       <- add_p_label(Ea_by_elev, get_lm_label(df_sub, "Ea_kJmol"))
+Ea_by_elev       <- add_p_label(Ea_by_elev, get_lm_label(df_sub, "Ea_PSII"))
 z_by_elev        <- add_p_label(z_by_elev, get_lm_label(df_sub, "z"))
-T50_prime_by_elev<- add_p_label(T50_prime_by_elev, get_lm_label(df_sub, "T50_prime"))
+CTmax_1min_by_elev<- add_p_label(CTmax_1min_by_elev, get_lm_label(df_sub, "CTmax_1min"))
 gsw_by_elev      <- add_p_label(gsw_by_elev, get_lm_label(df_sub, "gsw_mean_above30"))
 
 combined_plot <- (Amax_by_elev | Tbreadth_by_elev |Topt_by_elev) /
   (Ed_by_elev | T50_by_elev |Ea_by_elev) /
-  (z_by_elev | T50_prime_by_elev|gsw_by_elev)
+  (z_by_elev | CTmax_1min_by_elev|gsw_by_elev)
 combined_plot
 
 # Save as PDF
-ggsave("./figures_updated/FigS3.pdf", combined_plot,
+ggsave("./figures_updated/FigS2.pdf", combined_plot,
        width = 8, height = 8, units = "in")
 
-#### Fig S4 ###############
+#### Fig S3 ###############
 df_final_merged
-vars <- c("Amax", "breadth_90", "T_opt", "E_D", "T50",
-          "Ea_kJmol", "z", "T50_prime","lnA", "gsw_mean_above30")
+vars <- c("Amax", "Tbreadth", "Topt", "Ed_A", "T50",
+          "Ea_PSII", "z", "CTmax_1min","lnA_PSII", "gsw_mean_above30")
 df_sub <- df_final_merged %>%
   dplyr::select(all_of(vars)) 
 
@@ -1523,18 +1475,17 @@ cor_long <- cor_long %>%
     )
   ) %>%
   filter(keep)
-#write.csv(cor_long, "figures_updated/cor_long_all.csv", row.names = FALSE)
 cor_long
 
 pretty_labels <- c(
   Amax = expression(italic(A)[max]),
-  breadth_90 = expression(italic(T)[breadth]),
-  T_opt = expression(italic(T)[opt]),
-  E_D = expression(italic(E)[d*","~A]),
+  Tbreadth = expression(italic(T)[breadth]),
+  Topt = expression(italic(T)[opt]),
+  Ed_A = expression(italic(E)[d*","~A]),
   T50 = expression(italic(T)[50]),
-  Ea_kJmol = expression(italic(E)[a*","~PSII]),
+  Ea_PSII = expression(italic(E)[a*","~PSII]),
   z = expression(italic(z)),
-  T50_prime = expression(italic(CT)["max,1min"]),
+  CTmax_1min = expression(italic(CT)["max,1min"]),
   gsw_mean_above30 = expression(italic(g)[s])
 )
 
@@ -1585,9 +1536,8 @@ p <- ggplot(cor_long, aes(x = Var2, y = Var1)) +
   )
 
 p
-write.csv(cor_long,"pairwise_all_vars.csv")
 ggsave(
-  "./figures_updated/FigS4.pdf",
+  "./figures_updated/FigS3.pdf",
   plot = p,
   width = 8,
   height = 7
@@ -1595,14 +1545,39 @@ ggsave(
 
 #Correlation between Topt and Ed,A within curves
 cor.test(
-  df_final_merged$T_opt,
-  df_final_merged$E_D,
+  df_final_merged$Topt,
+  df_final_merged$Ed_A,
   use = "complete.obs",
   method = "pearson"
 )
 
+# Measurement-error correction: Topt and Ed_A are fit simultaneously from
+# the same curve, so their observed correlation could partly reflect the
+# fitting procedure rather than real among-individual variation. Check
+# this by comparing each parameter's mean SE (fitting uncertainty) to its
+# among-individual SD, then disattenuate the correlation for that
+# measurement error (Spearman 1904): r_true = r_obs / sqrt(rel_x * rel_y),
+# where reliability = 1 - mean(SE)^2 / var(estimate).
+topt_edA <- df_final_merged %>%
+  filter(!is.na(Topt), !is.na(Ed_A), !is.na(Topt_SE), !is.na(Ed_A_SE))
 
-####################Fig S5  ###########
+r_obs <- cor(topt_edA$Topt, topt_edA$Ed_A)
+
+pct_SE_Topt <- mean(topt_edA$Topt_SE) / sd(topt_edA$Topt) * 100
+pct_SE_ED   <- mean(topt_edA$Ed_A_SE)   / sd(topt_edA$Ed_A)   * 100
+
+rel_Topt <- 1 - mean(topt_edA$Topt_SE)^2 / var(topt_edA$Topt)
+rel_ED   <- 1 - mean(topt_edA$Ed_A_SE)^2   / var(topt_edA$Ed_A)
+
+r_corrected <- r_obs / sqrt(rel_Topt * rel_ED)
+
+cat(sprintf(
+  "n = %d\nmean SE as %% of among-individual SD: Topt = %.1f%%, Ed_A = %.1f%%\nuncorrected r2 = %.3f\ncorrected r2   = %.3f\n",
+  nrow(topt_edA), pct_SE_Topt, pct_SE_ED, r_obs^2, r_corrected^2
+))
+
+
+####################Fig S4  ###########
 library(dplyr)
 library(ggplot2)
 
@@ -1612,7 +1587,7 @@ exposure_times <- 1:100000
 # Calculate correlation at each exposure duration
 cor_results <- lapply(exposure_times, function(t) {
   
-  CTmax <- df_final_merged$T50_prime -
+  CTmax <- df_final_merged$CTmax_1min -
     df_final_merged$z * log10(t)
   
   test <- cor.test(
@@ -1698,7 +1673,7 @@ ggplot(cor_results, aes(x = time, y = r)) +
     axis.text = element_text(size = 12),
     legend.text = element_text(size = 12)
   )
-ggsave("./figures_updated/FigS5.pdf", last_plot(),
+ggsave("./figures_updated/FigS4.pdf", last_plot(),
        width = 8, height = 6, units = "in")
 
 #Crossing temp
@@ -1710,7 +1685,7 @@ cor_results %>%
   filter(sign != previous_sign) %>%
   select(time, r, previous_sign, sign)
 
-################# Fig S6 ##################
+################# Fig S5 ##################
 library(broom)
 # restrict to majority-supported temperature range
 df_sub <- gsw_by_tleaf %>%
@@ -1832,13 +1807,13 @@ combined_plot <- (gsw_slope_elev | gsw_slope_mtwq) /
 combined_plot
 
 # Save as PDF
-ggsave("./figures_updated/FigS6.pdf", combined_plot,
+ggsave("./figures_updated/FigS5.pdf", combined_plot,
        width = 8, height = 7, units = "in")
 
 
-##################Fig S7 PCA ##################
+##################Fig S6 PCA ##################
 df_pca <- df_final_merged %>%
-  select(breadth_90, Amax, T_opt, E_D, T50,Ea_kJmol,lnA,T50,z,T50_prime, gsw_mean_above30, population_category) %>%
+  select(Tbreadth, Amax, Topt, Ed_A, T50, Ea_PSII, lnA_PSII, z, CTmax_1min, gsw_mean_above30, population_category) %>%
   drop_na()
 
 # Run PCA (scale = TRUE is important!)# Rungsw_mean_above30 PCA (scale = TRUE is important!)
@@ -1909,9 +1884,156 @@ pca_plot <- ggplot(scores, aes(PC1, PC2, colour = population_category)) +
 pca_plot
 
 
-pca_res$rotation #Table 3
+table_s3 <- as.data.frame(pca_res$rotation) #Table S3
+table_s3
+write.csv(table_s3, "./figures_updated/TableS3.csv")
+
 summary(pca_res)
 
-ggsave("./figures_updated/FigS6_v2.pdf", pca_plot,
+ggsave("./figures_updated/FigS6.pdf", pca_plot,
        width = 8, height = 8, units = "in")
+
+############################### Excel stat summaries: Fig 4-7 ##############################
+# One workbook per figure, containing the exact statistics annotated on
+# the plot (and/or quoted in the Results text) for that figure. Each is
+# recomputed here from df_final_merged directly, rather than reusing
+# objects from earlier sections, so this block stays correct even if
+# variable names above (e.g. "vars", "cor_mat") get reassigned later in
+# the script.
+library(openxlsx)
+library(broom)
+
+vif_to_df <- function(model, label) {
+  v <- vif(model)
+  data.frame(model = label, term = names(v), VIF = round(as.numeric(v), 3))
+}
+
+pairwise_corr_table <- function(data, vars) {
+  sub <- data %>% dplyr::select(all_of(vars))
+  rc <- Hmisc::rcorr(as.matrix(sub))
+  pairs <- combn(vars, 2, simplify = FALSE)
+  purrr::map_dfr(pairs, function(pr) {
+    a <- pr[1]; b <- pr[2]
+    data.frame(
+      Variable_1 = a,
+      Variable_2 = b,
+      n = rc$n[a, b],
+      r = round(rc$r[a, b], 4),
+      r2 = round(rc$r[a, b]^2, 4),
+      p = rc$P[a, b],
+      significant = rc$P[a, b] < 0.05
+    )
+  })
+}
+
+# ---- Fig 4: pairwise correlations among Amax, Tbreadth, Topt, gs ----
+fig4_corr <- pairwise_corr_table(
+  df_final_merged, c("Amax", "Tbreadth", "Topt", "gsw_mean_above30")
+)
+
+wb4 <- createWorkbook()
+addWorksheet(wb4, "Pairwise correlations")
+writeData(wb4, "Pairwise correlations", fig4_corr)
+saveWorkbook(wb4, "./figures_updated/Fig4_stats.xlsx", overwrite = TRUE)
+
+# ---- Fig 5: gs ~ Tleaf (majority-supported range + mixed model) ----
+fig5_range <- data.frame(
+  Description = "Leaf temperature range where >=70% of curves have observations",
+  Tmin_C = majority_range$Tmin,
+  Tmax_C = majority_range$Tmax
+)
+
+mm_coefs <- as.data.frame(summary(mod_gsw_mixed)$coefficients)
+mm_coefs <- data.frame(term = rownames(mm_coefs), mm_coefs, row.names = NULL)
+
+wb5 <- createWorkbook()
+addWorksheet(wb5, "Temperature range")
+writeData(wb5, "Temperature range", fig5_range)
+addWorksheet(wb5, "Mixed model gs~Tleaf")
+writeData(wb5, "Mixed model gs~Tleaf", mm_coefs)
+saveWorkbook(wb5, "./figures_updated/Fig5_stats.xlsx", overwrite = TRUE)
+
+# ---- Fig 6: Amax ~ predictor + gs (partial regression) ----
+fig6_partial <- bind_rows(
+  get_partial_stats("Tbreadth", df_partial) %>% mutate(panel = "a: Tbreadth"),
+  get_partial_stats("Topt", df_partial)      %>% mutate(panel = "b: Topt")
+) %>% select(panel, predictor, n, pvalue, partial_R2)
+
+fig6_full_coefs <- bind_rows(
+  broom::tidy(mod_breadth) %>% mutate(model = "Amax ~ Tbreadth + gs"),
+  broom::tidy(mod_Topt)    %>% mutate(model = "Amax ~ Topt + gs")
+) %>% select(model, everything())
+
+fig6_full_fit <- bind_rows(
+  broom::glance(mod_breadth) %>% mutate(model = "Amax ~ Tbreadth + gs"),
+  broom::glance(mod_Topt)    %>% mutate(model = "Amax ~ Topt + gs")
+) %>% select(model, everything())
+
+fig6_vif <- bind_rows(
+  vif_to_df(mod_breadth, "Amax ~ Tbreadth + gs"),
+  vif_to_df(mod_Topt, "Amax ~ Topt + gs")
+)
+
+wb6 <- createWorkbook()
+addWorksheet(wb6, "Partial regression stats")
+writeData(wb6, "Partial regression stats", fig6_partial)
+addWorksheet(wb6, "Full model coefficients")
+writeData(wb6, "Full model coefficients", fig6_full_coefs)
+addWorksheet(wb6, "Full model fit")
+writeData(wb6, "Full model fit", fig6_full_fit)
+addWorksheet(wb6, "VIF")
+writeData(wb6, "VIF", fig6_vif)
+saveWorkbook(wb6, "./figures_updated/Fig6_stats.xlsx", overwrite = TRUE)
+
+# ---- Fig 7: Tbreadth/Ed,A ~ Topt + T50 + gs (partial regression) ----
+get_partial_stats_fig7 <- function(response, focal_predictor, predictors, data) {
+  df <- data %>% dplyr::select(all_of(c(response, predictors))) %>% na.omit()
+  full_mod <- lm(reformulate(predictors, response = response), data = df)
+  full_R2 <- summary(full_mod)$r.squared
+  control_vars <- predictors[predictors != focal_predictor]
+  res_Y <- resid(lm(reformulate(control_vars, response = response), data = df))
+  res_X <- resid(lm(reformulate(control_vars, response = focal_predictor), data = df))
+  partial_s <- summary(lm(res_Y ~ res_X))
+  data.frame(
+    response = response, focal = focal_predictor,
+    n = nrow(df),
+    pvalue = coef(partial_s)[2, 4],
+    partial_R2 = partial_s$r.squared,
+    full_R2 = full_R2
+  )
+}
+
+preds7 <- c("Topt", "T50", "gsw_mean_above30")
+fig7_partial <- bind_rows(
+  get_partial_stats_fig7("Tbreadth", "Topt", preds7, df_final_merged) %>% mutate(panel = "a: Tbreadth~Topt"),
+  get_partial_stats_fig7("Tbreadth", "T50",   preds7, df_final_merged) %>% mutate(panel = "b: Tbreadth~T50"),
+  get_partial_stats_fig7("Ed_A", "Topt", preds7, df_final_merged)        %>% mutate(panel = "c: Ed,A~Topt"),
+  get_partial_stats_fig7("Ed_A", "T50",   preds7, df_final_merged)        %>% mutate(panel = "d: Ed,A~T50")
+) %>% select(panel, response, focal, n, pvalue, partial_R2, full_R2)
+
+fig7_full_coefs <- bind_rows(
+  broom::tidy(vif_breadth_full) %>% mutate(model = "Tbreadth ~ Topt + T50 + gs"),
+  broom::tidy(vif_EdA_full)     %>% mutate(model = "Ed,A ~ Topt + T50 + gs")
+) %>% select(model, everything())
+
+fig7_full_fit <- bind_rows(
+  broom::glance(vif_breadth_full) %>% mutate(model = "Tbreadth ~ Topt + T50 + gs"),
+  broom::glance(vif_EdA_full)     %>% mutate(model = "Ed,A ~ Topt + T50 + gs")
+) %>% select(model, everything())
+
+fig7_vif <- bind_rows(
+  vif_to_df(vif_breadth_full, "Tbreadth ~ Topt + T50 + gs"),
+  vif_to_df(vif_EdA_full, "Ed,A ~ Topt + T50 + gs")
+)
+
+wb7 <- createWorkbook()
+addWorksheet(wb7, "Partial regression stats")
+writeData(wb7, "Partial regression stats", fig7_partial)
+addWorksheet(wb7, "Full model coefficients")
+writeData(wb7, "Full model coefficients", fig7_full_coefs)
+addWorksheet(wb7, "Full model fit")
+writeData(wb7, "Full model fit", fig7_full_fit)
+addWorksheet(wb7, "VIF")
+writeData(wb7, "VIF", fig7_vif)
+saveWorkbook(wb7, "./figures_updated/Fig7_stats.xlsx", overwrite = TRUE)
 

@@ -18,7 +18,8 @@ every script relies on (no absolute paths).
    (`fit_mod_SS.R`) per curve.
    - Writes `data/at.clean.trimmed.csv` (trimmed per-curve A-Tleaf gas-exchange
      data) and `data/faster_parameters_SS.csv` (per-curve fit parameters:
-     `T_opt`, `Amax`, `breadth_90`, etc.)
+     `T_opt`, `Amax`, `breadth_90`, etc. -- these are the raw, on-disk names;
+     see the note on naming below).
    - Also writes per-curve diagnostic plots to `./SS_fits/` (not included in
      this repo -- regenerated on rerun).
 
@@ -29,22 +30,33 @@ every script relies on (no absolute paths).
 
 3. **`01_merge_faster_tdt.R`** -- merges the two outputs above (bridged via
    `data/at.clean.trimmed.csv`, which carries both `curveID` and individual
-   id), refits an Arrhenius model (`Ea_kJmol`, `lnA`) from `exp_all_wide.csv`,
+   id), refits an Arrhenius model (`Ea_PSII`, `lnA_PSII`) from `exp_all_wide.csv`,
    attaches `gsw_mean_above30` and source-site metadata
    (`data/snowgum_metadata_source_pops.csv`), and applies data-quality checks:
-   1. delete curves where `T_opt` is fit outside the measured Tleaf range
-   2. set `breadth_90` to NA if its 90%-of-Amax breadth extends beyond the
+   1. delete curves where `Topt` is fit outside the measured Tleaf range
+   2. set `Tbreadth` to NA if its 95%-of-Amax breadth extends beyond the
       measured Tleaf range
    3. set `T50` to NA outside 34-54°C
-   4. null out `z`/`T50_prime`/`Ea_kJmol`/`lnA` (all four) if any is negative
+   4. null out `z`/`CTmax_1min`/`Ea_PSII`/`lnA_PSII` (all four) if any is negative
    - Writes `data/faster_tdt_merged.csv` (final per-curve dataset),
      `data/at_clean_trimmed_with_site.csv` (raw curve data + `site`/
      `population_category`), and `data/qc_exclusion_summary.csv` (exclusion
      tally by criterion).
+   - Renames the raw fitting output's columns to match the manuscript's
+     nomenclature (Table 1) at the point they're read in: `T_opt`->`Topt`,
+     `E_D`->`Ed_A`, `breadth_90`->`Tbreadth` (this one was also misleading on
+     its own terms -- the actual threshold is 95%, not 90%), `T50_prime`->
+     `CTmax_1min`, `Ea_kJmol`->`Ea_PSII`, `lnA`->`lnA_PSII`. Everything from
+     `data/faster_tdt_merged.csv` onward (including `01_analyses.R` and all
+     figures/tables) uses these clearer names; only the two raw fitting-output
+     CSVs (`faster_parameters_SS.csv`, `tdt_clean.csv`) still use the old names
+     on disk, since renaming them would require re-running the curve fits.
 
 4. **`01_analyses.R`** -- reads `data/faster_tdt_merged.csv` and
    `data/at_clean_trimmed_with_site.csv`, produces the manuscript's figures
-   and tables into `figures_updated/`.
+   (`Fig4`-`Fig7`, `FigS1`-`FigS6`), tables (`TableS1`-`TableS3`), and a
+   per-figure Excel workbook of the statistics annotated on each of Fig. 4-7
+   (`Fig4_stats.xlsx`-`Fig7_stats.xlsx`) into `figures_updated/`.
 
 ## Supporting files
 
@@ -72,4 +84,4 @@ every script relies on (no absolute paths).
 
 R (4.x) with: `tidyverse`, `nls.multstart`, `nlstools`, `lubridate`,
 `segmented`, `tidylog`, `readxl`, `rTPC`, `minpack.lm`, `car`, `patchwork`,
-`gam`, `mgcv`, `lme4`, `lmerTest`, `Hmisc`, `broom`, `maps`, `ggrepel`.
+`gam`, `mgcv`, `lme4`, `lmerTest`, `Hmisc`, `broom`, `maps`, `openxlsx`.
