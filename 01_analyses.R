@@ -799,7 +799,7 @@ write.csv(table_s1, "./figures_updated/TableS1.csv", row.names = FALSE)
 
 ############## Table S2: Sample sizes by parameter and source population ##############
 vars <- c(
-  "Amax", "Tbreadth", "Topt", "Ed_A", "Ea_PSII",
+  "Amax", "Tbreadth", "Topt", "Ea_A", "Ed_A", "Ea_PSII",
   "T50", "z", "CTmax_1min", "lnA_PSII", "gsw_mean_above30"
 )
 
@@ -1128,10 +1128,12 @@ df_sub <- df_final_merged
 get_lm_label <- function(df, yvar) {
   fit <- lm(reformulate("elev_m", yvar), data = df)
   p <- summary(fit)$coefficients[2, 4]
-  
-  p_lab <- ifelse(p < 0.001, "p < 0.001",
-                  paste0("p = ", signif(p, 2)))
-  
+
+  # plotmath string (parsed with parse = TRUE in add_p_label) so italic(p)
+  # renders as an italicized p rather than plain text
+  p_lab <- ifelse(p < 0.001, "italic(p) < 0.001",
+                  paste0("italic(p) == ", signif(p, 2)))
+
   return(p_lab)
 }
 
@@ -1141,7 +1143,8 @@ add_p_label <- function(p, label) {
     x = -Inf, y = Inf,
     label = label,
     hjust = -0.1, vjust = 1.1,
-    size = 4
+    size = 4,
+    parse = TRUE
   )
 }
 
@@ -1160,9 +1163,9 @@ Amax_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Amax,color=population_category))+
     limits = c(800, 1600)
   )+
   ylab(expression(italic(A)[max]~
-                    "(" * mu*"mol"~m^{-2}~s^{-1}*")"))+
+                    "(" * mu*"mol"~m^{"-2"}~s^{"-1"}*")"))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
-  xlab("Elevation (m)")+
+  xlab(NULL)+
   theme_classic()+
   theme(
     panel.background = element_blank(),
@@ -1194,7 +1197,7 @@ Tbreadth_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Tbreadth,color=population_categor
   )+
   ylab(expression(italic(T)[breadth]~"(°C)"))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
-  xlab("Elevation (m)")+
+  xlab(NULL)+
   theme_classic()+
   theme(
     panel.background = element_blank(),
@@ -1221,7 +1224,7 @@ Topt_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Topt,color=population_category))+
   )+
   ylab(expression(italic(T)[opt]~"(°C)"))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
-  xlab("Elevation (m)")+
+  xlab(NULL)+
   theme_classic()+
   theme(
     panel.background = element_blank(),
@@ -1232,6 +1235,32 @@ Topt_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Topt,color=population_category))+
     axis.text = element_text(size = 12),
     legend.position = "none")
 Topt_by_elev
+
+Ea_A_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ea_A,color=population_category))+
+  geom_point()+
+  scale_colour_manual(
+    values = c(
+      "tableland"   = alpha("#800080", 0.4),
+      "montane"     = alpha("#FFAE03", 0.4),
+      "sub alpine"  = alpha("#8AAA79", 0.4)
+    )
+  ) +
+  scale_x_continuous(
+    breaks = c(800, 1200, 1600),
+    limits = c(800, 1600)
+  )+
+  ylab(expression(italic(E)[a*","~A]~"(eV)"))+
+  xlab(NULL)+
+  theme_classic()+
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.position = "none")
+Ea_A_by_elev
 
 Ed_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ed_A,color=population_category))+
   geom_point()+
@@ -1246,9 +1275,9 @@ Ed_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ed_A,color=population_category))+
     breaks = c(800, 1200, 1600),
     limits = c(800, 1600)
   )+
-  ylab(expression(italic(E)[d]~"(eV)")) +
+  ylab(expression(italic(E)[d*","~A]~"(eV)")) +
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
-  xlab("Elevation (m)")+
+  xlab(NULL)+
   theme_classic()+
   theme(
     panel.background = element_blank(),
@@ -1275,7 +1304,7 @@ T50_by_elev<-ggplot(df_sub,aes(x=elev_m,y=T50,color=population_category))+
   )+
   ylab(expression(italic(T)[50]~"(°C)")) +
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
-  xlab("Elevation (m)")+
+  xlab(NULL)+
   theme_classic()+
   theme(
     panel.background = element_blank(),
@@ -1300,9 +1329,9 @@ Ea_by_elev<-ggplot(df_sub,aes(x=elev_m,y=Ea_PSII,color=population_category))+
     breaks = c(800, 1200, 1600),
     limits = c(800, 1600)
   )+
-  ylab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
+  ylab(expression(italic(E)[a*","~PSII]~"(kJ mol"^{"-1"}*")"))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
-  xlab("Elevation (m)")+
+  xlab(NULL)+
   theme_classic()+
   theme(
     panel.background = element_blank(),
@@ -1327,7 +1356,7 @@ z_by_elev<-ggplot(df_sub,aes(x=elev_m,y=z,color=population_category))+
     breaks = c(800, 1200, 1600),
     limits = c(800, 1600)
   )+
-  ylab(expression(italic(z)~"dimensionless"))+
+  ylab(expression(italic(z)~"(°C)"))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
   xlab("Elevation (m)")+
   theme_classic()+
@@ -1357,7 +1386,7 @@ CTmax_1min_by_elev <- ggplot(
     breaks = c(800, 1200, 1600),
     limits = c(800, 1600)
   ) +
-  ylab(expression(italic(CT)[paste("max, 1 min")] ~ "(°C)")) +
+  ylab(expression(italic(CT)["max,1min"] ~ "(°C)")) +
   xlab("Elevation (m)") +
   theme_classic() +
   theme(
@@ -1387,7 +1416,7 @@ gsw_by_elev<-ggplot(df_sub,aes(x=elev_m,y=gsw_mean_above30,color=population_cate
   )+
   #ylab(expression(g[s]))+
   ylab(expression(italic(g)[s]~
-                    "(mol "~m^{-2}~s^{-1}*")")) +
+                    "(mol "~m^{"-2"}~s^{"-1"}*")")) +
   xlab("Elevation (m)")+
   theme_classic()+
   theme(
@@ -1401,28 +1430,35 @@ gsw_by_elev<-ggplot(df_sub,aes(x=elev_m,y=gsw_mean_above30,color=population_cate
 gsw_by_elev
 
 library(patchwork)
-Amax_by_elev <- add_p_label(Amax_by_elev, get_lm_label(df_sub, "Amax"))
+Amax_by_elev     <- add_p_label(Amax_by_elev, get_lm_label(df_sub, "Amax"))
 Tbreadth_by_elev <- add_p_label(Tbreadth_by_elev, get_lm_label(df_sub, "Tbreadth"))
 Topt_by_elev     <- add_p_label(Topt_by_elev, get_lm_label(df_sub, "Topt"))
+Ea_A_by_elev     <- add_p_label(Ea_A_by_elev, get_lm_label(df_sub, "Ea_A"))
 Ed_by_elev       <- add_p_label(Ed_by_elev, get_lm_label(df_sub, "Ed_A"))
-T50_by_elev      <- add_p_label(T50_by_elev, get_lm_label(df_sub, "T50"))
 Ea_by_elev       <- add_p_label(Ea_by_elev, get_lm_label(df_sub, "Ea_PSII"))
+T50_by_elev      <- add_p_label(T50_by_elev, get_lm_label(df_sub, "T50"))
 z_by_elev        <- add_p_label(z_by_elev, get_lm_label(df_sub, "z"))
 CTmax_1min_by_elev<- add_p_label(CTmax_1min_by_elev, get_lm_label(df_sub, "CTmax_1min"))
 gsw_by_elev      <- add_p_label(gsw_by_elev, get_lm_label(df_sub, "gsw_mean_above30"))
 
-combined_plot <- (Amax_by_elev | Tbreadth_by_elev |Topt_by_elev) /
-  (Ed_by_elev | T50_by_elev |Ea_by_elev) /
-  (z_by_elev | CTmax_1min_by_elev|gsw_by_elev)
+# 10 panels (a-j): 3 columns x 4 rows, with the last row's two empty slots
+# filled by plot_spacer() so the grid stays aligned. Letters are applied
+# automatically by plot_annotation(tag_levels = 'a') in panel order below.
+combined_plot <- (Amax_by_elev | Tbreadth_by_elev | Topt_by_elev) /
+  (Ea_A_by_elev | Ed_by_elev | Ea_by_elev) /
+  (T50_by_elev | z_by_elev | CTmax_1min_by_elev) /
+  (gsw_by_elev | plot_spacer() | plot_spacer()) +
+  plot_annotation(tag_levels = "a") &
+  theme(plot.tag = element_text(face = "bold"))
 combined_plot
 
 # Save as PDF
 ggsave("./figures_updated/FigS2.pdf", combined_plot,
-       width = 8, height = 8, units = "in")
+       width = 8, height = 10.5, units = "in")
 
 #### Fig S3 ###############
 df_final_merged
-vars <- c("Amax", "Tbreadth", "Topt", "Ed_A", "T50",
+vars <- c("Amax", "Tbreadth", "Topt", "Ea_A", "Ed_A", "T50",
           "Ea_PSII", "z", "CTmax_1min","lnA_PSII", "gsw_mean_above30")
 df_sub <- df_final_merged %>%
   dplyr::select(all_of(vars)) 
@@ -1481,11 +1517,13 @@ pretty_labels <- c(
   Amax = expression(italic(A)[max]),
   Tbreadth = expression(italic(T)[breadth]),
   Topt = expression(italic(T)[opt]),
+  Ea_A = expression(italic(E)[a*","~A]),
   Ed_A = expression(italic(E)[d*","~A]),
   T50 = expression(italic(T)[50]),
   Ea_PSII = expression(italic(E)[a*","~PSII]),
   z = expression(italic(z)),
   CTmax_1min = expression(italic(CT)["max,1min"]),
+  lnA_PSII = expression(paste("ln(", italic(A)[PSII], ")")),
   gsw_mean_above30 = expression(italic(g)[s])
 )
 
@@ -1624,9 +1662,9 @@ ggplot(cor_results, aes(x = time, y = r)) +
     alpha = 0.25
   ) +
   
-  # r = 0
-  geom_hline(
-    yintercept = 0,
+  # t* = 35 min, where the correlation crosses zero
+  geom_vline(
+    xintercept = 35,
     linetype = "dashed",
     colour = "grey40"
   ) +
@@ -1651,9 +1689,9 @@ ggplot(cor_results, aes(x = time, y = r)) +
     )
   ) +
   
-  # Log10-scaled x axis
-  scale_x_log10(
-    breaks = c(1, 5, 10, 30, 60, 120, 1000,10000,100000)
+  scale_x_continuous(
+    limits = c(0, 300),
+    breaks = seq(0, 300, by = 50)
   ) +
   
   scale_y_continuous(
@@ -1740,7 +1778,10 @@ gsw_slope_elev <- ggplot(slopes_climate,aes(x=elev_m,y=slope,color=population_ca
       "sub alpine"  = alpha("#8AAA79", 0.4)
     )
   ) +
-  ylab("Slope of stomatal conductance\nby leaf temperature")+
+  ylab(expression(atop(
+    "Slope of stomatal conductance",
+    "by leaf temperature (mol "*m^{"-2"}*s^{"-1"}*"°C"^{"-1"}*")"
+  )))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
   xlab("Elevation (m)")+
   theme_classic()+
@@ -1751,6 +1792,7 @@ gsw_slope_elev <- ggplot(slopes_climate,aes(x=elev_m,y=slope,color=population_ca
     axis.line = element_line(color = "black"),
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12),
+    plot.margin = margin(t = 20, r = 5.5, b = 5.5, l = 12),
     legend.position = "none")
 gsw_slope_elev
 summary(lm(slope~elev_m,slopes_climate))
@@ -1765,7 +1807,10 @@ gsw_slope_mtwq <-ggplot(slopes_climate,aes(x=BIO10,y=slope,color=population_cate
       "sub alpine"  = alpha("#8AAA79", 0.4)
     )
   ) +
-  ylab("Slope of stomatal conductance\nby leaf temperature")+
+  ylab(expression(atop(
+    "Slope of stomatal conductance",
+    "by leaf temperature (mol "*m^{"-2"}*s^{"-1"}*"°C"^{"-1"}*")"
+  )))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
   xlab("Mean temperature warmest quarter (C)")+
   theme_classic()+
@@ -1776,6 +1821,7 @@ gsw_slope_mtwq <-ggplot(slopes_climate,aes(x=BIO10,y=slope,color=population_cate
     axis.line = element_line(color = "black"),
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12),
+    plot.margin = margin(t = 20, r = 5.5, b = 5.5, l = 12),
     legend.position = "none")
 gsw_slope_mtwq
 gsw_slope_precip <-ggplot(slopes_climate,aes(x=BIO12,y=slope,color=population_category))+
@@ -1787,7 +1833,10 @@ gsw_slope_precip <-ggplot(slopes_climate,aes(x=BIO12,y=slope,color=population_ca
       "sub alpine"  = alpha("#8AAA79", 0.4)
     )
   ) +
-  ylab("Slope of stomatal conductance\nby leaf temperature")+
+  ylab(expression(atop(
+    "Slope of stomatal conductance",
+    "by leaf temperature (mol "*m^{"-2"}*s^{"-1"}*"°C"^{"-1"}*")"
+  )))+
   #xlab(expression(italic(E)[a]~"(kJ mol"^{-1}*")"))+
   xlab("Mean annual precipitation (mm)")+
   theme_classic()+
@@ -1798,6 +1847,7 @@ gsw_slope_precip <-ggplot(slopes_climate,aes(x=BIO12,y=slope,color=population_ca
     axis.line = element_line(color = "black"),
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12),
+    plot.margin = margin(t = 20, r = 5.5, b = 5.5, l = 12),
     legend.position = "none")
 gsw_slope_precip
 library(patchwork)
@@ -1808,12 +1858,12 @@ combined_plot
 
 # Save as PDF
 ggsave("./figures_updated/FigS5.pdf", combined_plot,
-       width = 8, height = 7, units = "in")
+       width = 9, height = 7, units = "in")
 
 
 ##################Fig S6 PCA ##################
 df_pca <- df_final_merged %>%
-  select(Tbreadth, Amax, Topt, Ed_A, T50, Ea_PSII, lnA_PSII, z, CTmax_1min, gsw_mean_above30, population_category) %>%
+  select(Tbreadth, Amax, Topt, Ea_A, Ed_A, T50, Ea_PSII, lnA_PSII, z, CTmax_1min, gsw_mean_above30, population_category) %>%
   drop_na()
 
 # Run PCA (scale = TRUE is important!)# Rungsw_mean_above30 PCA (scale = TRUE is important!)

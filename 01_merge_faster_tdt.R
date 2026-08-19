@@ -44,18 +44,21 @@ source("fit_mod_SS.R")   # reuse the schoolfield() curve function for check 2
 # 1. Load source data
 #
 # faster_parameters_SS.csv and tdt_clean.csv are raw fitting output --
-# their on-disk column names (T_opt, E_D, breadth_90, T_opt_SE, T_opt_var,
+# their on-disk column names (T_opt, E, E_D, breadth_90, T_opt_SE, T_opt_var,
 # Topt_ED_cov, Topt_ED_cor, T50_prime) predate this naming cleanup and
 # aren't touched by re-running 00_faster_fitting.R/00_tdt_fitting.R, so
 # they're renamed here to the clearer names used everywhere downstream:
-#   T_opt -> Topt, E_D -> Ed_A, breadth_90 -> Tbreadth (this one was
-#     also misleading on its own terms -- fit_mod_SS.R actually uses a
-#     95% threshold, not 90%, despite the old column name), T50_prime
-#     (already CTmax,1min in meaning; see 00_tdt_fitting.R) -> CTmax_1min
+#   T_opt -> Topt, E -> Ea_A (apparent activation energy of the AT
+#     response below Topt; Table 1), E_D -> Ed_A, breadth_90 -> Tbreadth
+#     (this one was also misleading on its own terms -- fit_mod_SS.R
+#     actually uses a 95% threshold, not 90%, despite the old column
+#     name), T50_prime (already CTmax,1min in meaning; see
+#     00_tdt_fitting.R) -> CTmax_1min
 # ------------------------------------------------------------
 faster <- read.csv("data/faster_parameters_SS.csv", row.names = 1, stringsAsFactors = FALSE) %>%
   rename(
     Topt = T_opt, Topt_SE = T_opt_SE, Topt_var = T_opt_var,
+    Ea_A = E, Ea_A_SE = E_SE, Ea_A_var = E_var,
     Ed_A = E_D, Ed_A_SE = E_D_SE, Ed_A_var = E_D_var,
     Tbreadth = breadth_90,
     Topt_EdA_cov = Topt_ED_cov, Topt_EdA_cor = Topt_ED_cor
@@ -225,14 +228,14 @@ exclusion_log[["QC1: Topt outside measured Tleaf range (curve deleted)"]] <- len
 # to decide whether the breadth estimate leans on extrapolated, not
 # measured, temperatures.
 # ------------------------------------------------------------
-recompute_breadth_bounds <- function(J_ref, E, Ed_A, Topt, Amax, Tleaf_min, Tleaf_max) {
-  if (any(is.na(c(J_ref, E, Ed_A, Topt, Amax, Tleaf_min, Tleaf_max)))) {
+recompute_breadth_bounds <- function(J_ref, Ea_A, Ed_A, Topt, Amax, Tleaf_min, Tleaf_max) {
+  if (any(is.na(c(J_ref, Ea_A, Ed_A, Topt, Amax, Tleaf_min, Tleaf_max)))) {
     return(c(NA_real_, NA_real_))
   }
   T_extrap <- seq(Tleaf_min - 5, Tleaf_max + 5, by = 0.1)
   # schoolfield() (fit_mod_SS.R) still uses its own original parameter
-  # names (E_D, T_opt) -- only this script's column/variable names changed.
-  pred <- schoolfield(temp = T_extrap, J_ref = J_ref, E = E, E_D = Ed_A, T_opt = Topt)
+  # names (E, E_D, T_opt) -- only this script's column/variable names changed.
+  pred <- schoolfield(temp = T_extrap, J_ref = J_ref, E = Ea_A, E_D = Ed_A, T_opt = Topt)
   above <- T_extrap[pred >= 0.95 * Amax]
   if (length(above) > 1) range(above) else c(NA_real_, NA_real_)
 }
@@ -242,7 +245,7 @@ n_breadth_before <- sum(!is.na(faster$Tbreadth))
 faster <- faster %>%
   rowwise() %>%
   mutate(
-    breadth_bounds = list(recompute_breadth_bounds(J_ref, E, Ed_A, Topt, Amax, Tleaf_min, Tleaf_max)),
+    breadth_bounds = list(recompute_breadth_bounds(J_ref, Ea_A, Ed_A, Topt, Amax, Tleaf_min, Tleaf_max)),
     breadth_low  = breadth_bounds[1],
     breadth_high = breadth_bounds[2]
   ) %>%
