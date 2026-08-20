@@ -2,7 +2,7 @@
 "Duplicate base curve (S05T01P01, keep R2 only)",1
 "Individual never had a faster curve (e.g. excluded upstream as Bad, row dropped)",1
 "QC1: Topt outside measured Tleaf range (curve deleted)",5
-"QC2: Tbreadth extends beyond measured Tleaf range (set NA)",12
+"QC2: Tbreadth extends beyond measured Tleaf range (set NA)",10
 "QC3: T50 outside 34-54C (set NA)",0
 "QC4: negative z/CTmax_1min/Ea_PSII/lnA_PSII (row nulled)",0
 "Total rows dropped for missing Amax/Topt (= QC1 + never-had-curve, check)",6

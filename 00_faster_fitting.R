@@ -14,12 +14,16 @@ library(rTPC)
 # Assumes the working directory is the project root (true by default when
 # this project's .Rproj is opened in RStudio).
 source("correct_6800_functions.R")
+source("match_correct.R")
 
 # load list of file paths for Licor data
 at.files = list.files("licor_data", full.names = TRUE)
 
 # extract list of IDs from the file names
-at.ids <- lapply(at.files, function(x)strsplit(x, split = "[_]")[[1]][2]) #save the individual IDs, extracted from file names
+# NOTE: split on the basename only, not the full path -- "licor_data" itself
+# contains an underscore, which used to shift the split index and corrupt
+# every extracted ID (e.g. "DATA/2025-01-30-1019" instead of "S14T03P09").
+at.ids <- lapply(at.files, function(x)strsplit(basename(x), split = "[_]")[[1]][2]) #save the individual IDs, extracted from file names
 at.ids <- sub("\\.xlsx$", "", at.ids)
 
 # LOAD LICOR FILES
@@ -234,6 +238,19 @@ at.all$`Î”Pcham` <- at.all$Î.Pcham
 
 #at.all$Bad <- as.numeric(at.all$Bad)
 at.all <- at.all %>% filter(is.na(Bad))
+
+# ---------------------------------------------------------------------------
+# IRGA match-test drift correction (Garen & Michaletz, 2024)
+# ---------------------------------------------------------------------------
+# Each curve's final logged row is a "match test" point recorded when the
+# instrument re-matched its IRGAs. match_correct() linearly interpolates the
+# accumulated co2_adj/h2o_adj drift across each curve's time span, applies it
+# to CO2_s/H2O_s, recalculates all downstream gas-exchange variables (A, E,
+# gsw, Ci, etc.) via calc_licor6800(), and drops the match-test row itself.
+# Must run after curveID assignment (needs curveID to split curves), the
+# ΔPcham fix above (calc_licor6800() requires it), and the Bad-flag filter
+# (no need to correct curves that are already excluded).
+at.all <- match_correct(at.all)
 
 at.clean.trimmed <- at.all %>%
   group_by(curveID) %>%

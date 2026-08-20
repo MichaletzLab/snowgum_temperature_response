@@ -234,13 +234,13 @@ ggplot(gsw_by_tleaf, aes(x = Tleaf, y = gsw)) +
   ) +
   
   theme_classic() +
-  theme(legend.position = "right") +
+  theme(legend.position = "none") +
   labs(
     x = "Leaf temperature (°C)",
-    y = expression(g[s])
+    y = expression("Stomatal conductance (mol " * m^{"-2"} * s^{"-1"} * ")")
   )
 
-ggsave("./figures_updated/Fig5.pdf", plot = last_plot(), width = 15, height = 10, units = "cm")
+ggsave("./figures_updated/Fig5.pdf", plot = last_plot(), width = 12, height = 10, units = "cm")
 
 # Linear mixed-effects model: gs ~ Tleaf within the majority-
 # supported temperature window, with curve identity as a
@@ -326,20 +326,6 @@ plot_partial_gsw <- function(var, data) {
     population_category = df$population_category
   )
   
-  # statistics
-  summary_model <- summary(lm(res_A ~ res_X))
-  
-  R2   <- round(summary_model$r.squared, 3)
-  pval <- signif(summary_model$coefficients[2,4], 3)
- # cor(res_X, res_Y)
-  
-  
-  label_text <- sprintf(
-    "atop(R^2 == %.3f, p == %.3g)",
-    R2,
-    pval
-  )
-  
   ggplot(df_plot, aes(x = res_X, y = res_A)) +
     
     geom_point(
@@ -362,31 +348,20 @@ plot_partial_gsw <- function(var, data) {
       "montane" = "#FFAE03",
       "sub alpine" = "#8AAA79"
     )) +
-    
+
     xlab(var_labels[[var]]) +
-    
+
     ylab(expression(
       italic(A)[max]~
         "(" * mu*"mol"~m^{-2}~s^{-1}*")"
     )) +
-    
-    annotate(
-      "text",
-      x = Inf,
-      y = Inf,
-      label = label_text,
-      hjust = 1.3,
-      vjust = 1.2,
-      size = 5,
-      parse = TRUE
-    ) +
-    
+
     theme_classic() +
-    
+
     theme(
       legend.position = "none",
-      axis.title = element_text(size = 14),
-      axis.text  = element_text(size = 12)
+      axis.title = element_text(size = 18),
+      axis.text  = element_text(size = 16)
     )
 }
 
@@ -408,7 +383,7 @@ fig6
 ggsave(
   "./figures_updated/Fig6.pdf",
   fig6,
-  height = 8,
+  height = 6,
   width = 10,
   units = "in"
 )
@@ -426,16 +401,6 @@ plot_partial_model <- function(response, focal_predictor,
       population_category
     ) %>%
     na.omit()
-  
-  # Full model
-  full_mod <- lm(
-    reformulate(predictors, response = response),
-    data = df
-  )
-  
-  full_s <- summary(full_mod)
-  
-  full_R2 <- full_s$r.squared
   
   # Control variables
   control_vars <- predictors[predictors != focal_predictor]
@@ -459,22 +424,6 @@ plot_partial_model <- function(response, focal_predictor,
     res_X = res_X,
     res_Y = res_Y,
     population_category = df$population_category
-  )
-  
-  # Partial model
-  partial_mod <- lm(res_Y ~ res_X)
-  partial_s <- summary(partial_mod)
-  
-  partial_r <- cor(res_X, res_Y)
-  partial_R2 <- partial_s$r.squared
-  pval <- coef(partial_s)[2, 4]
-  
-  label_text <- sprintf(
-    "r = %.3f\npartial R² = %.3f\np = %.3g\nfull R² = %.3f",
-    partial_r,
-    partial_R2,
-    pval,
-    full_R2
   )
   
   # Plot
@@ -503,17 +452,7 @@ plot_partial_model <- function(response, focal_predictor,
     
     xlab(xlab_expr) +
     ylab(ylab_expr) +
-    
-    annotate(
-      "text",
-      x = Inf,
-      y = Inf,
-      label = label_text,
-      hjust = 1.3,
-      vjust = 1.2,
-      size = 4.5
-    ) +
-    
+
     theme_classic() +
     theme(
       axis.title = element_text(size = 14),
@@ -565,19 +504,24 @@ x_range <- range(
 x_range
 x_range <- x_range + c(-1, 1)
 
-get_partial_y <- function(response, data) {
-  
+get_partial_y <- function(response, focal_predictor, data) {
+
   predictors <- c("Topt", "T50", "gsw_mean_above30")
-  
+
   df <- data %>%
     select(
       all_of(c(response, predictors)),
       population_category
     ) %>%
     na.omit()
-  
-  control_vars <- predictors[predictors != response]
-  
+
+  # Match plot_partial_model()'s own res_Y exactly: control for the OTHER
+  # predictors, leaving the focal one free. Using a third, different
+  # control set here (e.g. controlling for all three) would size the
+  # shared axis range against a residual quantity that isn't what's
+  # actually plotted, clipping the real scatter/line in either panel.
+  control_vars <- predictors[predictors != focal_predictor]
+
   resid(
     lm(
       reformulate(control_vars, response = response),
@@ -587,8 +531,17 @@ get_partial_y <- function(response, data) {
 }
 
 
-y_Tbreadth <- get_partial_y("Tbreadth", df_final_merged)
-y_EdA      <- get_partial_y("Ed_A", df_final_merged)
+# Each row shares one y-axis range across its two panels (Topt-focal and
+# T50-focal), so the range must be the union of what each panel actually
+# plots -- not a separately-controlled residual set.
+y_Tbreadth <- c(
+  get_partial_y("Tbreadth", "Topt", df_final_merged),
+  get_partial_y("Tbreadth", "T50",  df_final_merged)
+)
+y_EdA <- c(
+  get_partial_y("Ed_A", "Topt", df_final_merged),
+  get_partial_y("Ed_A", "T50",  df_final_merged)
+)
 
 y_Tbreadth_range <- range(y_Tbreadth, na.rm = TRUE)
 y_EdA_range      <- range(y_EdA, na.rm = TRUE)
@@ -1690,8 +1643,8 @@ ggplot(cor_results, aes(x = time, y = r)) +
   ) +
   
   scale_x_continuous(
-    limits = c(0, 300),
-    breaks = seq(0, 300, by = 50)
+    limits = c(0, 150),
+    breaks = seq(0, 150, by = 25)
   ) +
   
   scale_y_continuous(
@@ -1935,6 +1888,11 @@ pca_plot
 
 
 table_s3 <- as.data.frame(pca_res$rotation) #Table S3
+# PC1's sign is flipped here to match the flip applied to scores$PC1 and
+# loadings$PC1 above for the Fig. S6 biplot -- otherwise this table's
+# signs would be the mirror image of the biplot and the Results/
+# Discussion text describing it.
+table_s3$PC1 <- -table_s3$PC1
 table_s3
 write.csv(table_s3, "./figures_updated/TableS3.csv")
 
@@ -1985,6 +1943,18 @@ wb4 <- createWorkbook()
 addWorksheet(wb4, "Pairwise correlations")
 writeData(wb4, "Pairwise correlations", fig4_corr)
 saveWorkbook(wb4, "./figures_updated/Fig4_stats.xlsx", overwrite = TRUE)
+
+# ---- Fig S3: correlation matrix of AT/PSII/gs parameters (11 vars) ----
+figS3_corr <- pairwise_corr_table(
+  df_final_merged,
+  c("Amax", "Tbreadth", "Topt", "Ea_A", "Ed_A", "T50",
+    "Ea_PSII", "z", "CTmax_1min", "lnA_PSII", "gsw_mean_above30")
+)
+
+wbS3 <- createWorkbook()
+addWorksheet(wbS3, "Pairwise correlations")
+writeData(wbS3, "Pairwise correlations", figS3_corr)
+saveWorkbook(wbS3, "./figures_updated/FigS3_stats.xlsx", overwrite = TRUE)
 
 # ---- Fig 5: gs ~ Tleaf (majority-supported range + mixed model) ----
 fig5_range <- data.frame(
