@@ -1,7 +1,6 @@
 # snowgum_temperature_response
 
-Thermal performance and heat-tolerance data/analysis for *Eucalyptus pauciflora*
-(snow gum) populations across an elevation gradient (MSFSS project, Chapter 7).
+Thermal performance and heat-tolerance data/analysis for *Eucalyptus pauciflora*.
 Combines gas-exchange photosynthesis-temperature curves (FASTER), PSII thermal
 death time (TDT), and Fv/Fm thermal-decay (Arrhenius) data into one per-curve
 dataset, applies data-quality checks, and produces the manuscript's figures/tables.
